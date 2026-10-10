@@ -1,0 +1,536 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraud Detection Dashboard</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        header {
+            background: #172554;
+            color: white;
+            padding: 22px 30px;
+        }
+
+        header h1 {
+            font-size: 26px;
+            margin-bottom: 7px;
+        }
+
+        header p {
+            color: #cbd5e1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 25px auto;
+            padding: 0 20px;
+        }
+
+        .status {
+            margin-bottom: 20px;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 8px;
+            border-left: 5px solid #64748b;
+        }
+
+        .cards {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 18px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: white;
+            padding: 22px;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px #0f172a0d;
+        }
+
+        .card p {
+            color: #64748b;
+            font-size: 14px;
+            margin-bottom: 12px;
+        }
+
+        .card h2 {
+            font-size: 28px;
+        }
+
+        .red { color: #dc2626; }
+        .green { color: #16a34a; }
+        .blue { color: #2563eb; }
+        .purple { color: #7c3aed; }
+
+        .panel {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 12px #0f172a0d;
+        }
+
+        .panel h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            font-size: 15px;
+        }
+
+        input:focus {
+            outline: 2px solid #93c5fd;
+            border-color: #2563eb;
+        }
+
+        .submit-btn {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 13px 22px;
+            border-radius: 7px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .submit-btn:hover {
+            background: #1d4ed8;
+        }
+
+        .refresh-btn {
+            float: right;
+            background: #e2e8f0;
+            color: #1e293b;
+            border: none;
+            padding: 9px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 700px;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 14px 12px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f8fafc;
+            color: #475569;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 9px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .fraud {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
+        .normal {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .message {
+            margin-top: 15px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        @media (max-width: 800px) {
+            .cards {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 500px) {
+            .cards, .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                padding: 20px;
+            }
+
+            .panel {
+                padding: 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>🛡️ Fraud Detection System</h1>
+        <p>Monitor transactions and identify potentially fraudulent activity</p>
+    </header>
+
+    <main class="container">
+        <div class="status" id="connectionStatus" role="status">
+            Connecting to Spring Boot backend...
+        </div>
+
+        <section class="cards">
+            <div class="card">
+                <p>Total Transactions</p>
+                <h2 class="blue" id="totalTransactions">0</h2>
+            </div>
+
+            <div class="card">
+                <p>Flagged Transactions</p>
+                <h2 class="red" id="fraudTransactions">0</h2>
+            </div>
+
+            <div class="card">
+                <p>Normal Transactions</p>
+                <h2 class="green" id="normalTransactions">0</h2>
+            </div>
+
+            <div class="card">
+                <p>Total Transaction Amount</p>
+                <h2 class="purple" id="totalAmount">₹0</h2>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>➕ Add New Transaction</h2>
+
+            <form id="transactionForm">
+                <div class="form-grid">
+                    <div>
+                        <label for="amount">Transaction Amount (₹)</label>
+                        <input type="number" id="amount" min="0.01"
+                               step="0.01" required placeholder="Enter amount">
+                    </div>
+
+                    <div>
+                        <label for="merchant">Merchant Name</label>
+                        <input type="text" id="merchant" required
+                               maxlength="100" placeholder="e.g. ABC Store">
+                    </div>
+
+                    <div>
+                        <label for="location">Transaction Location</label>
+                        <input type="text" id="location" required
+                               maxlength="100" placeholder="e.g. Hyderabad">
+                    </div>
+
+                    <div>
+                        <label for="transactionHour">Transaction Hour (0–23)</label>
+                        <input type="number" id="transactionHour"
+                               min="0" max="23" step="1"
+                               required value="14">
+                    </div>
+                </div>
+
+                <button class="submit-btn" id="submitButton" type="submit">
+                    Check & Save Transaction
+                </button>
+
+                <p class="message" id="formMessage" role="status"></p>
+            </form>
+        </section>
+
+        <section class="panel">
+            <h2>
+                📋 Recent Transactions
+                <button class="refresh-btn" id="refreshButton" type="button">
+                    ↻ Refresh
+                </button>
+            </h2>
+
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Amount</th>
+                            <th>Merchant</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Reason</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="transactionsTable">
+                        <tr>
+                            <td colspan="6">Loading transactions...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="message" id="tableMessage" role="status"></p>
+        </section>
+    </main>
+
+    <footer>
+        Fraud Detection System | Spring Boot + MySQL + HTML + CSS + JavaScript
+    </footer>
+
+    <script>
+        // Backend API URL
+        const API_URL = "http://localhost:8083/api/transactions";
+
+        const statusBox = document.getElementById("connectionStatus");
+        const form = document.getElementById("transactionForm");
+        const formMessage = document.getElementById("formMessage");
+        const tableMessage = document.getElementById("tableMessage");
+        const submitButton = document.getElementById("submitButton");
+
+        function escapeHtml(value) {
+            return String(value ?? "").replace(/[&<>"']/g, function (char) {
+                return {
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    '"': "&quot;",
+                    "'": "&#39;"
+                }[char];
+            });
+        }
+
+        function formatMoney(value) {
+            return Number(value || 0).toLocaleString("en-IN", {
+                style: "currency",
+                currency: "INR",
+                maximumFractionDigits: 2
+            });
+        }
+
+        function isFlagged(transaction) {
+            return transaction.flaggedFraud === true ||
+                   transaction.flaggedFraud === 1 ||
+                   transaction.flaggedFraud === "1";
+        }
+
+        async function loadTransactions() {
+            statusBox.textContent = "Connecting to backend...";
+            tableMessage.textContent = "";
+
+            try {
+                const response = await fetch(API_URL);
+
+                if (!response.ok) {
+                    throw new Error("Backend returned HTTP " + response.status);
+                }
+
+                const transactions = await response.json();
+
+                if (!Array.isArray(transactions)) {
+                    throw new Error("Unexpected API response. Expected a list.");
+                }
+
+                statusBox.textContent =
+                    "✓ Connected to Spring Boot backend successfully.";
+                statusBox.style.borderLeftColor = "#16a34a";
+
+                renderDashboard(transactions);
+            } catch (error) {
+                statusBox.textContent =
+                    "Connection failed. Start Spring Boot on port 8083. " +
+                    "If you opened this page with Live Server, enable CORS " +
+                    "in Spring Boot. Details: " + error.message;
+
+                statusBox.style.borderLeftColor = "#dc2626";
+
+                document.getElementById("transactionsTable").innerHTML =
+                    '<tr><td colspan="6">Unable to load transactions. ' +
+                    'Check that the backend is running.</td></tr>';
+
+                tableMessage.textContent =
+                    "The dashboard could not retrieve data from the API.";
+            }
+        }
+
+        function renderDashboard(transactions) {
+            const total = transactions.length;
+            const fraudCount = transactions.filter(isFlagged).length;
+            const normalCount = total - fraudCount;
+
+            const amountTotal = transactions.reduce(function (sum, item) {
+                return sum + Number(item.amount || 0);
+            }, 0);
+
+            document.getElementById("totalTransactions").textContent = total;
+            document.getElementById("fraudTransactions").textContent = fraudCount;
+            document.getElementById("normalTransactions").textContent = normalCount;
+            document.getElementById("totalAmount").textContent =
+                formatMoney(amountTotal);
+
+            const sorted = [...transactions].sort(function (a, b) {
+                return Number(b.id || 0) - Number(a.id || 0);
+            });
+
+            const tbody = document.getElementById("transactionsTable");
+
+            if (sorted.length === 0) {
+                tbody.innerHTML =
+                    '<tr><td colspan="6">No transactions yet. Add one above.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = sorted.map(function (t) {
+                const flagged = isFlagged(t);
+
+                return `
+                    <tr>
+                        <td>${escapeHtml(t.id)}</td>
+                        <td>${escapeHtml(formatMoney(t.amount))}</td>
+                        <td>${escapeHtml(t.merchant)}</td>
+                        <td>${escapeHtml(t.location)}</td>
+                        <td>
+                            <span class="badge ${flagged ? "fraud" : "normal"}">
+                                ${flagged ? "⚠ Fraud Alert" : "✓ Normal"}
+                            </span>
+                        </td>
+                        <td>${escapeHtml(t.fraudReason || "Not specified")}</td>
+                    </tr>
+                `;
+            }).join("");
+        }
+
+        form.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const amount = Number(document.getElementById("amount").value);
+            const merchant = document.getElementById("merchant").value.trim();
+            const location = document.getElementById("location").value.trim();
+            const transactionHour = Number(
+                document.getElementById("transactionHour").value
+            );
+
+            if (!Number.isFinite(amount) || amount <= 0) {
+                formMessage.textContent = "Enter an amount greater than zero.";
+                return;
+            }
+
+            if (!merchant || !location ||
+                !Number.isInteger(transactionHour) ||
+                transactionHour < 0 || transactionHour > 23) {
+                formMessage.textContent =
+                    "Enter valid merchant, location, and hour (0–23).";
+                return;
+            }
+
+            const transaction = {
+                amount: amount,
+                merchant: merchant,
+                location: location,
+                transactionHour: transactionHour
+            };
+
+            submitButton.disabled = true;
+            submitButton.textContent = "Saving...";
+            formMessage.textContent = "";
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(transaction)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(
+                        "HTTP " + response.status + " " + errorText
+                    );
+                }
+
+                const result = await response.json();
+                const flagged = isFlagged(result);
+
+                formMessage.textContent =
+                    "Transaction saved successfully. Result: " +
+                    (flagged ? "POTENTIAL FRAUD" : "NORMAL") +
+                    ". Reason: " + (result.fraudReason || "Not specified");
+
+                formMessage.style.color = flagged ? "#b91c1c" : "#15803d";
+
+                form.reset();
+                document.getElementById("transactionHour").value = "14";
+
+                await loadTransactions();
+            } catch (error) {
+                formMessage.textContent =
+                    "Could not save transaction: " + error.message +
+                    ". Check backend and CORS settings.";
+                formMessage.style.color = "#b91c1c";
+            } finally {
+                submitButton.disabled = false;
+                submitButton.textContent = "Check & Save Transaction";
+            }
+        });
+
+        document.getElementById("refreshButton").addEventListener(
+            "click", loadTransactions
+        );
+
+        // Load existing records when the page opens.
+        loadTransactions();
+    </script>
+</body>
+</html>
+
+
+
