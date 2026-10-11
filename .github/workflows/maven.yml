@@ -40,4 +40,4 @@ jobs:
         env:
           DB_URL: jdbc:mysql://127.0.0.1:3306/fraud_detection
           DB_USERNAME: root
-          DB_PASSWORD: ${{secrets.DB_password}}
+          DB_PASSWORD: root
